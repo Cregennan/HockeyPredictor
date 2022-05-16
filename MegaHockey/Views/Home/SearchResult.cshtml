@@ -1,0 +1,323 @@
+﻿@using MegaHockey.Data
+
+@{
+    ViewData["Title"] = "Результаты предсказания";
+    var classifier = ClassifierSingletone.Instance().classifier;
+    HistoryRecordContext h_context = ViewBag.Context;
+}
+@{
+    string first= ViewBag.First;
+    string second = ViewBag.Second;
+
+    try
+    {
+
+        int code1 = KHLParser.TeamCodes.IndexOf(first);
+        int code2 = KHLParser.TeamCodes.IndexOf(second);
+        bool decision = classifier.Decide(new double[] { code1, code2 });
+        var winner = decision? first : second;
+
+        h_context.Add(new HistoryRecord
+        {
+            First = first,
+            Second = second,
+            UserId = ViewBag.User,
+            GameResult = winner,
+        });
+        h_context.SaveChanges();
+
+
+        <h1 class="mt-5">Предсказание на игру <strong>@(first)</strong> - <strong>@(second)</strong></h1> 
+        <section class="d-flex mt-5 align-items-center h1">
+                <span class="mr-5">Победит:  </span>
+                <img  src="@(KHLParser.GetTeamAvatar(winner))" class="rounded-circle" style="width: 100px"/>
+                                        @(winner)
+        </section>
+        
+
+        <h2></h2>
+        var games = KHLParser.GetPairStatistics(first, second);
+        if (games.Count() == 0)
+        {
+            throw new Exception();
+        }
+
+        var teamstats = new Dictionary<String, int>()
+        {
+            {first, 0},
+            {second, 0}
+        };
+
+        foreach(var t in games)
+        {
+            (var a, var b, var l, var r) = t;
+
+            if(l > r)
+            {
+                teamstats[a]++;
+            }
+            else
+            {
+                teamstats[b]++;
+            }
+        }
+
+
+        <div style="display: flex; flex-direction: row; justify-content: space-between; align-items:center;" class="mt-5">
+            <div  style="width: 500px;  height: 500px;"  >
+                <canvas id="myChart"></canvas>
+            </div>
+            <div  style="width: 500px;  height: 500px; display: flex; flex-direction: row; align-items:center; " >
+                <canvas id="bar-chart-grouped" ></canvas>
+            </div>
+            
+        </div>
+
+        
+
+
+
+        <script>
+              const labels = [
+                '@Html.Raw(first)',
+                '@Html.Raw(second)',
+              ];
+
+              const data = {
+                labels: labels,
+                datasets: [{
+                  label: 'Данные команд',
+                  backgroundColor: ['rgb(57, 147, 179)', 'rgb(255, 105, 141)'],
+                  borderColor: ['rgb(57, 147, 179)', 'rgb(255, 105, 141)'],
+                  data: [@(teamstats[first]), @(teamstats[second])],
+                }]
+              };
+
+              const config = {
+                type: 'pie',
+                data: data,
+                options: {
+                    responsive: true,
+                    plugins: {
+                      legend: {
+                        position: 'top',
+                      },
+                      title: {
+                        display: true,
+                        text: 'Соотношение количества побед у команд'
+                      }
+                    }
+                  },
+              };
+
+              document.addEventListener('DOMContentLoaded', function(){
+                const myChart = new Chart(
+                    document.getElementById('myChart'),
+                    config
+                );
+              });
+              
+
+        </script>
+
+        
+        <script>
+        document.addEventListener('DOMContentLoaded', function(){
+                new Chart(document.getElementById("bar-chart-grouped"), {
+                    type: 'bar',
+                    data: {
+                    labels: [
+                        @{
+                            int tempcounter = 0;
+                            foreach(var game in games)
+                            {
+                                @Html.Raw("'"+ (tempcounter+1) + "',")
+                                tempcounter++;
+                            }
+                        }
+                    ],
+                    datasets: [
+                    {
+                        label: "@Html.Raw(first)",
+                        backgroundColor: "#3e95cd",
+                        data: [
+                        @{
+                            foreach(var game in games)
+                            {
+                                @Html.Raw(game.Item3 + ",")
+                            }
+                        }
+                        ]
+                    }, {
+                        label: "@Html.Raw(second)",
+                        backgroundColor: "#8e5ea2",
+                        data: [
+                        @{
+                            foreach(var game in games)
+                            {
+                                @Html.Raw(game.Item4 + ",")
+                            }
+                        }
+                        ]
+                    }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                      legend: {
+                        position: 'top',
+                      },
+                      title: {
+                        display: true,
+                        text: 'Соотношение побед/поражений команд относительно друг-друга'
+                      }
+                    }
+                  },
+            });
+        });
+        
+    </script>
+
+
+
+
+        <h4 class="mt-5">Прошлые игры  <strong>@(first)</strong> - <strong>@(second)</strong></h4>
+
+        <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Хозяева</th>
+                <th scope="col">Гости</th>
+                <th scope="col">Результат</th>
+            </tr>
+        </thead>
+        <tbody>
+                @{
+                    foreach(var game in games.Take(10))
+                    {
+                        <tr>
+                            <td>
+                                <img src="@(KHLParser.GetTeamAvatar(game.Item1))" class="rounded-circle" style="width: 30px"/>
+                                @(game.Item1)
+                            </td>
+                            <td>
+                                <img src="@(KHLParser.GetTeamAvatar(game.Item2))" class="rounded-circle" style="width: 30px"/>
+                                @(game.Item2)
+                            </td>
+                            <td>
+                                @(game.Item3) - @(game.Item4)
+                            </td>
+
+                        </tr>
+
+                    }
+                }
+            
+        </tbody>
+        </table>
+
+
+        <h1 class="mt-10">Сделать новое предсказание</h1>
+
+        @using(Html.BeginForm("SearchResult", "Home", FormMethod.Post))
+    {
+        <div class="form-group">
+            <label for="first" class="">Первая команда</label>
+            <select name="first" id="first" class="form-control custom-select mt-2" aria-label="Default select example">
+                @{
+                    int index2 = 0;
+                    foreach(var team in KHLParser.TeamCodes){
+                            if (index2 == 1)
+                            {
+                                <option value="@team" selected>@(team) (Тренер: @(KHLParser.Trainers[team]))</option>
+                            }
+                            else if (index2 == 0)
+                            {
+                                <option value="@team" disabled>@(team) (Тренер: @(KHLParser.Trainers[team]))</option>
+                            }else
+                            {
+                                <option value="@team">@(team) (Тренер: @(KHLParser.Trainers[team]))</option>
+                            }
+                            index2++;
+                        }
+                }
+            </select>
+        </div>
+       
+        <div class="form-group mt-4">
+            <label for="second" class="">Вторая команда</label>
+            <select name="second" id="second" class="form-control custom-select mt-2" aria-label="Default select example">
+                        @{
+                            int index = 0;
+                            foreach(var team in KHLParser.TeamCodes){
+
+                                    if(index == 0)
+                                    {
+                                        <option value="@team" selected>@(team) (Тренер: @(KHLParser.Trainers[team]))</option>
+                                    }
+                                    else if (index == 1)
+                                    {
+                                        <option value="@team" disabled>@(team) (Тренер: @(KHLParser.Trainers[team]))</option>
+                                    }else
+                                    {
+                                        <option value="@team">@(team) (Тренер: @(KHLParser.Trainers[team]))</option>
+                                    }
+                                    index++;
+                                }
+                        }
+                    </select>
+        </div>
+        <div class="form-group mt-4">
+            <label for="time" class="">Срок предсказания</label>
+            <select name="time" id="time" class="form-control custom-select mt-2" aria-label="Default select example">
+                        <option>Все время</option>
+                        <option>Последний год</option>
+                        <option>Последние полгода</option> 
+                        <option>Последние три месяца</option> 
+                    </select>
+        </div>
+
+        <div class="form-group mt-4">
+            <button type="submit" class="btn btn-primary" >Предсказание</button>
+        </div>
+    }
+
+    <script>
+    let first = document.getElementById('first');
+    let second = document.getElementById('second');
+
+    first.addEventListener('change', function (e) {
+        remapselect(first, second);
+    });
+
+    second.addEventListener('change', function (e) {
+        remapselect(second, first);
+    });
+
+    function remapselect(origin, another) {
+        //origin.options.forEach(function (e) {
+        //    e.removeAttribute("disabled");
+        //});
+        for (let option of another.options) {
+            option.removeAttribute("disabled");
+        }
+
+        let originoption = origin.options[origin.selectedIndex].text;
+
+        for (let option of another.options) {
+            if (option.text == originoption) {
+                option.setAttribute('disabled', 'disabled');
+            }
+        }
+    }
+</script>
+
+
+
+    }catch(Exception e)
+    {
+        <h4 class="mt-5">Команды @(first) и @(second) не найдены</h4>
+
+    }
+}

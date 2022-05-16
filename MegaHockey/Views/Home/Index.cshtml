@@ -1,0 +1,60 @@
+﻿@{
+    ViewData["Title"] = "Главная";
+    var classifier = ClassifierSingletone.Instance().classifier;
+}
+@{
+    var club = "ЦСКА";
+    try{
+        
+        var games = await KHLParser.GetTeamGamesAsync(club);
+        if (games.Count() == 0)
+        {
+            throw new Exception();
+        }
+        <h1 class="mt-5">Предсказания на ближайшие игры для @(club)</h1>
+
+        <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Хозяева</th>
+                <th scope="col">Гости</th>
+                <th scope="col">Результат</th>
+            </tr>
+        </thead>
+        <tbody>
+                @{
+                    foreach(var game in games)
+                    {
+                        <tr>
+                            <td>
+                                <img src="@(KHLParser.GetTeamAvatar(game.first))" class="rounded-circle" style="width: 30px"/>
+                                @(game.first)
+                            </td>
+                            <td>
+                                <img src="@(KHLParser.GetTeamAvatar(game.second))" class="rounded-circle" style="width: 30px"/>
+                                @(game.second)
+                            </td>
+                            <td>
+                                @{
+                                    var codeone = KHLParser.TeamCodes.IndexOf(game.first);
+                                    var codetwo = KHLParser.TeamCodes.IndexOf(game.second);
+                                    bool result = classifier.Decide(new double[] { codeone, codetwo });
+                                    var winnerteam = result ? game.first : game.second;
+                                        <img src="@(KHLParser.GetTeamAvatar(winnerteam))" class="rounded-full w-5 mr-2 inline" />
+                                        @(winnerteam)
+                                }
+                            </td>
+
+                        </tr>
+
+                    }
+                }
+        </tbody>
+        </table>
+
+    }catch(Exception e)
+    {
+        <h1 class="mt-5">Матчи для команды @(club) не найдены</h1>
+
+    }
+}

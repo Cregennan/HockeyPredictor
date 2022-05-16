@@ -1,0 +1,168 @@
+﻿@{
+    ViewData["Title"] = "Ручной режим";
+    var wins = ClassifierSingletone.Instance().Wins;
+    var sorted =  ClassifierSingletone.Instance().SortedWinners;
+
+
+}
+
+<section>
+    <h1 class="text-3xl">Сделать предсказание на матч</h1>
+    @using(Html.BeginForm("SearchResult", "Home", FormMethod.Post))
+    {
+        <div class="form-group">
+            <label for="first" class="">Первая команда</label>
+            <select name="first" id="first" class="form-control custom-select mt-2" aria-label="Default select example">
+                @{
+                    int index2 = 0;
+                    foreach(var team in KHLParser.TeamCodes){
+                            if (index2 == 1)
+                            {
+                                <option value="@team" selected>@(team) (Тренер: @(KHLParser.Trainers[team]))</option>
+                            }
+                            else if (index2 == 0)
+                            {
+                                <option value="@team" disabled>@(team) (Тренер: @(KHLParser.Trainers[team]))</option>
+                            }else
+                            {
+                                <option value="@team">@(team) (Тренер: @(KHLParser.Trainers[team]))</option>
+                            }
+                            index2++;
+                        }
+                }
+            </select>
+        </div>
+       
+        <div class="form-group mt-4">
+            <label for="second" class="">Вторая команда</label>
+            <select name="second" id="second" class="form-control custom-select mt-2" aria-label="Default select example">
+                        @{
+                            int index = 0;
+                            foreach(var team in KHLParser.TeamCodes){
+
+                                    if(index == 0)
+                                    {
+                                        <option value="@team" selected>@(team) (Тренер: @(KHLParser.Trainers[team]))</option>
+                                    }
+                                    else if (index == 1)
+                                    {
+                                        <option value="@team" disabled>@(team) (Тренер: @(KHLParser.Trainers[team]))</option>
+                                    }else
+                                    {
+                                        <option value="@team">@(team) (Тренер: @(KHLParser.Trainers[team]))</option>
+                                    }
+                                    index++;
+                                }
+                        }
+                    </select>
+        </div>
+        <div class="form-group mt-4">
+            <label for="time" class="">Срок предсказания</label>
+            <select name="time" id="time" class="form-control custom-select mt-2" aria-label="Default select example">
+                        <option>Все время</option>
+                        <option>Последний год</option>
+                        <option>Последние полгода</option> 
+                        <option>Последние три месяца</option> 
+                    </select>
+        </div>
+        <div class="form-group mt-4">
+            <button type="submit" class="btn btn-primary" >Предсказание</button>
+        </div>
+    }
+
+        <div style"  height: 500px;"  class="mt-5">
+            <canvas id="myChart"></canvas>
+        </div>
+
+
+
+        <script>
+              
+
+              document.addEventListener('DOMContentLoaded', function(){
+                new Chart(document.getElementById("myChart"), {
+                    type: 'bar',
+                    data: {
+                      labels: [
+                        @{
+                            foreach(var t in sorted)
+                            {
+                                @Html.Raw("'" + t.Item1 + "',")
+                            }
+                        }
+                      ],
+                      datasets: [
+                        {
+                          label: "Побед",
+                          backgroundColor: [
+                                @{
+                                    foreach(var t in sorted)
+                                    {
+                                        @Html.Raw("'" + KHLParser.Colors[KHLParser.TeamCodes.IndexOf(t.Item1)] +  "',")
+                                    }
+                                }
+                          
+                          ],
+                          data: [
+                            @{
+                                foreach(var t in sorted)
+                                {
+                                    @Html.Raw( t.Item2 + ",")
+                                }
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    options: {
+                      responsive: true,
+                        plugins: {
+                            legend: {
+                            position: 'top',
+                            },
+                            title: {
+                            display: true,
+                            text: 'Статистика побед команд КХЛ в регулярном чемпионате и Плей-офф за 2020-2021 года'
+                            }
+                        }
+                    }
+                });
+              });
+              
+
+        </script>
+
+
+
+
+</section>
+<script>
+    let first = document.getElementById('first');
+    let second = document.getElementById('second');
+
+    first.addEventListener('change', function (e) {
+        remapselect(first, second);
+    });
+
+    second.addEventListener('change', function (e) {
+        remapselect(second, first);
+    });
+
+    function remapselect(origin, another) {
+        //origin.options.forEach(function (e) {
+        //    e.removeAttribute("disabled");
+        //});
+        for (let option of another.options) {
+            option.removeAttribute("disabled");
+        }
+
+        let originoption = origin.options[origin.selectedIndex].text;
+
+        for (let option of another.options) {
+            if (option.text == originoption) {
+                option.setAttribute('disabled', 'disabled');
+            }
+        }
+    }
+</script>
+

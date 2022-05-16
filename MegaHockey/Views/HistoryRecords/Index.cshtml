@@ -1,0 +1,42 @@
+﻿@model IEnumerable<MegaHockey.Models.HistoryRecord>
+
+@{
+    ViewData["Title"] = "История запросов";
+}
+
+<h1>История запросов</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                Хозяева
+            </th>
+            <th>
+                Гости
+            </th>
+            <th>
+                Победитель
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.First)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Second)
+            </td>
+             <td>
+                @Html.DisplayFor(modelItem => item.GameResult)
+            </td>
+            <td>
+                <a asp-action="Delete" asp-route-id="@item.Id">Удалить</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

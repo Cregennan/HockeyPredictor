@@ -1,0 +1,42 @@
+﻿@model MegaHockey.Models.HistoryRecord
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>HistoryRecord</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.First)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.First)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Second)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Second)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.UserId)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.UserId)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.GameResult)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.GameResult)
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
+    <a asp-action="Index">Back to List</a>
+</div>
