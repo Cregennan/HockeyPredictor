@@ -1,11 +1,8 @@
 ﻿using MegaHockey;
 
 
-var classifier = ClassifierSingletone.Instance().classifier;
-var t = classifier.
+var classifier = ClassifierSingletone.Instance();
 
 
-foreach(var what in classifier)
-{
-    Console.WriteLine(what.Weight);
-}
+
+var a = 0;

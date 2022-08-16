@@ -1,5 +1,6 @@
 ﻿using Accord.MachineLearning.Boosting;
 using Accord.MachineLearning.Boosting.Learners;
+using Accord.Statistics.Models.Regression;
 
 namespace MegaHockey
 {
@@ -14,6 +15,8 @@ namespace MegaHockey
         }
 
         public Boost<DecisionStump> classifier { get; private set; }
+
+
         public int[] Wins { get; private set; }
         public (List<double[]>, List<int>, List<int>) GamesHistory { get; private set; }
 

@@ -52,7 +52,8 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Search}/{id?}");
+    pattern: "{controller=Home}/{action=Search}/{id?}"
+);
 //app.MapControllerRoute(
 //    name: "searchresult",
 //    pattern: "Home/SearchResult/{first}/{second}"
